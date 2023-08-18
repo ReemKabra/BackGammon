@@ -1,8 +1,9 @@
 import React,{useState,useEffect} from 'react'
-import { View, FlatList, TextInput, Button, StyleSheet, Text } from 'react-native';
-import { Stack } from 'expo-router';
+import { View, FlatList, TextInput, Button, Text,TouchableOpacity } from 'react-native';
+import { Stack, router } from 'expo-router';
 import styles from './Chat.style';
-// import io from 'socket.io-client';
+import { Ionicons } from '@expo/vector-icons'; 
+import {initiateSocket,getSocket,disconnectSocket} from "../utils/socket";
 import AsyncStorage from "@react-native-async-storage/async-storage";
  const ChatScreen = () => {
     const[FriendName,setFriendName] =useState("") 
@@ -10,7 +11,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
     const [messages, setMessages] = useState([]);
     const [typing, setTyping] = useState(false);
     const [user, setUser] = useState("");
-    // const socket = io("http://192.168.1.33:3000"); 
     const sendMessage = () => {
         if (message.trim() !== '') {
             setMessages([...messages, { text: message, sender: user }]);
@@ -45,6 +45,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
     },[]);
   return (
     <View style={styles.container}>
+        <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.replace("components/UserList2")} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </TouchableOpacity>
+      </View>
          {typing && <Text>{FriendName} is typing...</Text>}
           <Stack.Screen
           options={
@@ -62,7 +67,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
                 )}
                 keyExtractor={(item, index) => index.toString()}
             />
-
             <View style={styles.inputContainer}>
                 <TextInput
                     style={styles.input}

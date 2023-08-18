@@ -37,7 +37,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
         username: user.username,
         password: user.password,
         email: user.email,
-        token:""
+        token:null
       }
       UserService.put(newuser);
     }
