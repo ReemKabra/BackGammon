@@ -13,6 +13,7 @@ import { Stack, router } from 'expo-router';
 import { UserItem } from './UserItem';
 import AsyncStorage from '@react-native-async-storage/async-storage';
  const Userlist2 = () => {
+  const socket=getSocket();
   const [onlinedUsers,setOnlineUsers]=useState([]);
   const [isLoading,setIsLoading]=useState();
   const [users, setUsers] = useState([]);
@@ -30,13 +31,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
   }
     useEffect(()=>{
       getuser()
-    },[])
+      socket.on("recieved user-login",()=>{
+        getuser();
+      })
+      socket.on("received-logout",()=>{
+        getuser();
+      })
+    },[socket])
     const handleLogout = async () => {
       try {
           disconnectSocket();
           await AsyncStorage.removeItem("token");
+          socket.emit("logout");
           const currentUser = users.find(u => u.username === user);
-  
           if (currentUser) {
               const updatedUser = {
                   username: currentUser.username,

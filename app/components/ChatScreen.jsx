@@ -13,11 +13,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
     const [typing, setTyping] = useState(false);
     const [user, setUser] = useState("");
     const sendMessage = () => {
+        setTyping(false);
         if (message.trim() !== '' && socket) {  // check if socket is defined
             setMessages([...messages, { text: message, sender: user }]);
             socket.emit('message', { text: message, sender: user }); // emit your message
             setMessage('');
-            setTyping(false);
+
         }
     };
     const handleTyping = (text) => {
@@ -80,7 +81,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
             <FlatList
                 data={messages}
                 renderItem={({ item }) => (
-                    <View style={[styles.messageBox, item.sender === 'me' ? styles.sentMessage : styles.receivedMessage]}>
+                    <View style={[styles.messageBox, item.sender === user ? styles.sentMessage : styles.receivedMessage]}>
                         <Text>{item.text}</Text>
                     </View>
                 )}

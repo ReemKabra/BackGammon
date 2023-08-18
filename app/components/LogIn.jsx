@@ -32,6 +32,8 @@ const LogIn = () => {
         .then((loginSucceeded) => {
           if (loginSucceeded) {
             initiateSocket();
+            const socket=getSocket();
+            socket.emit("user-login");
             Alert.alert("loginSucceeded");
             router.replace("components/UserList2");
           } else Alert.alert("Login failed");
