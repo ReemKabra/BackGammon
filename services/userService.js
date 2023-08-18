@@ -27,9 +27,10 @@ class userService {
               return false;
           }
       }
-      put(user){
-        return axios.put(URL,user)
-      }
+      put(user) {
+        return axios.put(`${URL}${user.username}`, user);
+    }
+    
 
 }
 export default new userService;

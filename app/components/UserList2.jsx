@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react'
 import userService from "../../services/userService";
 import  UserService  from '../../services/userService';
 import styles from './UserItem.style';
+import {initiateSocket,getSocket,disconnectSocket} from "../utils/socket";
 import {
   View,
   Text,
   TouchableOpacity,
   FlatList,
 } from "react-native";
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { UserItem } from './UserItem';
 import AsyncStorage from '@react-native-async-storage/async-storage';
  const Userlist2 = () => {
@@ -30,17 +31,25 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
     useEffect(()=>{
       getuser()
     },[])
-    const handleLogout=()=>{
-      AsyncStorage.removeItem("token");
-      const user=users.find(User=>User.username=user)
-      const newuser={
-        username: user.username,
-        password: user.password,
-        email: user.email,
-        token:null
+    const handleLogout = async () => {
+      try {
+          disconnectSocket();
+          await AsyncStorage.removeItem("token");
+          const currentUser = users.find(u => u.username === user);
+  
+          if (currentUser) {
+              const updatedUser = {
+                  username: currentUser.username,
+                  token: null
+              };
+              await UserService.put(updatedUser);
+              router.replace("/");
+          }
+      } catch (error) {
+          console.error("Error during logout:", error);
       }
-      UserService.put(newuser);
-    }
+  };
+  
   return (
     <View>
        <Stack.Screen

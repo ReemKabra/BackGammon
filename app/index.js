@@ -9,7 +9,7 @@ import  LogIn  from './components/LogIn'
           options={
           {
             headerShadowVisible: true,
-            headerTitle:"Home"
+            headerTitle:"Welcome"
           }
           }/>
           <ScrollView>
