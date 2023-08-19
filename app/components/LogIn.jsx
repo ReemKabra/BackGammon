@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import userService from "../../services/userService";
@@ -6,10 +6,10 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 import {initiateSocket,getSocket,disconnectSocket} from "../utils/socket";
 const LogIn = () => {
   const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [isExists, setIsExists] = useState(true);
   const [users, setUsers] = useState([]);
-  const currentUserNameRef = useRef(null);
-  const currentPasswordRef = useRef(null);
   const fetchUsers = async () => {
     const response = await userService.get();
     setUsers(response.data);
@@ -17,18 +17,21 @@ const LogIn = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
-  const onChangeUsername = () => {
+  const onChangeHandler = (fieldName, text) => {
+    if (fieldName === 'username') {
+    setUsername(text);
     setIsExists(true);
+    } else if (fieldName === 'password') {
+      setPassword(text);
+    }
   };
   const loginHandler = () => {
-    const enterdUserName = currentUserNameRef.current?.value;
-    const enterdPassword = currentPasswordRef.current?.value;
-    const user = users.find((user) => user.username === enterdUserName);
+    const user = users.find((user) => user.username === username);
     if (!user) {
       setIsExists(false);
     } else if (user) {
       userService
-        .login(enterdUserName, enterdPassword)
+        .login(username, password)
         .then((loginSucceeded) => {
           if (loginSucceeded) {
             initiateSocket();
@@ -60,8 +63,7 @@ const LogIn = () => {
         <TextInput
           placeholder="Username"
           name=""
-          onChangeText={onChangeUsername}
-          ref={currentUserNameRef}
+          onChangeText={(text) => onChangeHandler('username', text)}
           style={{ borderBottomWidth: 1, marginBottom: 10 }}
         />
         {!isExists && (
@@ -73,7 +75,7 @@ const LogIn = () => {
           placeholder="Password"
           name=""
           secureTextEntry={true}
-          ref={currentPasswordRef}
+          onChangeText={(text) => onChangeHandler('password', text)}
           style={{ borderBottomWidth: 1, marginBottom: 10 }}
         />
       </View>

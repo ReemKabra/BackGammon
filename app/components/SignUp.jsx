@@ -1,4 +1,4 @@
-import React,{useState,useEffect,useRef} from 'react'
+import React,{useState,useEffect} from 'react'
 import { useRouter,Stack } from 'expo-router';
 import User from '../../models/user';
 import userService from '../../services/userService';
@@ -8,7 +8,9 @@ export const SignUp = ({navigation}) => {
     const [users, setUsers] = useState([]);
     const [isExists, setIsExists] = useState(false);
     const [isPassword, setIsPassword] = useState(true);
-  
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
     const fetchUsers = async () => {
       try {
         const response = await userService.get();
@@ -25,33 +27,29 @@ export const SignUp = ({navigation}) => {
     useEffect(() => {
       fetchUsers();
     }, []);
-  
-    const currentUserNameRef = useRef(null);
-    const currentPasswordRef = useRef(null);
-    const currentEmailRef = useRef(null);
     const onChangeHandler = (fieldName, text) => {
       if (fieldName === 'username') {
         setIsExists(false);
+        setUsername(text);
       } else if (fieldName === 'password') {
+        setPassword(text);
         setIsPassword(true);
       }
+      else{
+        setEmail(text);
+      }
     };
-  
     const signupHandler = () => {
-      const enteredUserName = currentUserNameRef.current?.value;
-      const enteredEmail = currentEmailRef.current?.value;
-      const enteredPassword = currentPasswordRef.current?.value||"";
-  
-      const user = users.find((user) => user.username === enteredUserName);
+      const user = users.find((user) => user.username === username);
       if (user) {
         setIsExists(true);
       }
-      if (enteredPassword.length < 6) {
+      if (password.length < 6) {
         setIsPassword(false);
-      } else if (enteredPassword.length >= 6 && !user) {
+      } else if (password.length >= 6 && !user) {
         setIsExists(false);
         setIsPassword(true);
-        const newuser=new User(enteredUserName, enteredPassword,enteredEmail)
+        const newuser=new User(username, password,email)
         console.log(newuser);
         userService.post(newuser);
         Alert.alert("Success", "User signed up successfully!");
@@ -79,7 +77,6 @@ export const SignUp = ({navigation}) => {
             name="username"
             type="text"
             style={{ borderWidth: 1, borderColor: 'black', marginBottom: 5 }}
-            ref={currentUserNameRef}
             onChangeText={(text) => onChangeHandler('username', text)}
         />
         {isExists && <Text style={{ color: 'red', marginBottom: 10 }}>This username already exists</Text>}
@@ -90,7 +87,6 @@ export const SignUp = ({navigation}) => {
             name="password"
             secureTextEntry={true}
             style={{ borderWidth: 1, borderColor: 'black', marginBottom: 5 }}
-            ref={currentPasswordRef}
             onChangeText={(text) => onChangeHandler('password', text)}
         />
         {!isPassword && <Text style={{ color: 'red', marginBottom: 10 }}>Invalid Password</Text>}
@@ -99,7 +95,7 @@ export const SignUp = ({navigation}) => {
         <TextInput
             type="text"
             style={{ borderWidth: 1, borderColor: 'black', marginBottom: 10 }}
-            ref={currentEmailRef}
+            onChangeText={(text) => onChangeHandler('email', text)}
         />
 
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
