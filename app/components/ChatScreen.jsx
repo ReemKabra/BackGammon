@@ -2,7 +2,6 @@ import React,{useState,useEffect} from 'react'
 import { View, FlatList, TextInput, Button, Text,TouchableOpacity } from 'react-native';
 import { Stack, router } from 'expo-router';
 import styles from './Chat.style';
-import { Ionicons } from '@expo/vector-icons'; 
 import {initiateSocket,getSocket,disconnectSocket} from "../utils/socket";
 import AsyncStorage from "@react-native-async-storage/async-storage";
  const ChatScreen = () => {
@@ -64,11 +63,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
     }, [socket]);
   return (
     <View style={styles.container}>
-        <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.replace("components/UserList2")} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="black" />
-        </TouchableOpacity>
-      </View>
       <Text>Chat with {FriendName}</Text>
          {typing && <Text>{FriendName} is typing...</Text>}
           <Stack.Screen

@@ -12,7 +12,7 @@ export const UserItem = (props) => {
       <Text>userName:{props.user.username}</Text>
       <TouchableOpacity onPress={() => { 
         AsyncStorage.setItem("FriendName",props.user.username);
-        router.replace("components/ChatScreen")
+        router.push("components/ChatScreen")
                 }}>
                     <MaterialIcons name="message" size={24} color="blue" />
                 </TouchableOpacity>

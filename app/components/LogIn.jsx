@@ -3,7 +3,7 @@ import { View, Text, TextInput, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import userService from "../../services/userService";
 import { TouchableOpacity } from "react-native-gesture-handler";
-import {initiateSocket,getSocket,disconnectSocket} from "../utils/socket";
+import {initiateSocket,getSocket} from "../utils/socket";
 const LogIn = () => {
   const router = useRouter();
   const [username, setUsername] = useState("");
@@ -16,6 +16,7 @@ const LogIn = () => {
   };
   useEffect(() => {
     fetchUsers();
+    
   }, []);
   const onChangeHandler = (fieldName, text) => {
     if (fieldName === 'username') {
@@ -35,16 +36,20 @@ const LogIn = () => {
         .then((loginSucceeded) => {
           if (loginSucceeded) {
             initiateSocket();
-            const socket=getSocket();
-            socket.emit("user-login");
+            const socket = getSocket();
+            const loggedInUser = {
+              username: user.username,
+            };
+            socket.emit("user-login", loggedInUser);  
             Alert.alert("loginSucceeded");
             router.replace("components/UserList2");
           } else Alert.alert("Login failed");
         });
     }
   };
+  
   const NavigateToSignUp = () => {
-    router.replace("components/SignUp");
+    router.push("components/SignUp");
   };
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import userService from "../../services/userService";
 import  UserService  from '../../services/userService';
 import styles from './UserItem.style';
-import {initiateSocket,getSocket,disconnectSocket} from "../utils/socket";
+import {getSocket,disconnectSocket} from "../utils/socket";
 import {
   View,
   Text,
@@ -29,33 +29,56 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
       setUsers(response.data);
     }
   }
-    useEffect(()=>{
-      getuser()
-      socket.on("recieved user-login",()=>{
-        getuser();
-      })
-      socket.on("received-logout",()=>{
-        getuser();
-      })
-    },[socket])
-    const handleLogout = async () => {
-      try {
+  useEffect(() => {
+    getuser();
+    const handleUserLogin = (loggedInUser) => {
+        if (loggedInUser.username !== user) {  // Prevent adding yourself to the list
+            setOnlineUsers(prevUsers => [...prevUsers, loggedInUser]);
+            setOfflineUsers(prevUsers => 
+                prevUsers.filter(u => u.username !== loggedInUser.username)
+            );
+        }
+    }
+    const handleUserLogout = (loggedOutUser) => {
+        if (loggedOutUser.username !== user) {  // Prevent removing yourself from the list
+            setOfflineUsers(prevUsers => [...prevUsers, loggedOutUser]);
+            setOnlineUsers(prevUsers => 
+                prevUsers.filter(u => u.username !== loggedOutUser.username)
+            );
+        }
+    }
+    socket.on("recieved user-login", handleUserLogin);
+    socket.on("received-logout", handleUserLogout);
+
+    return () => {
+        socket.off("recieved user-login", handleUserLogin);
+        socket.off("received-logout", handleUserLogout);
+    };
+}, [socket, user]);
+const handleLogout = async () => {
+  try {
+      const currentUser = users.find(u => u.username === user);
+      if (currentUser) {
+          // First, update the user's status in your database/service
+          const updatedUser = {
+              username: currentUser.username,
+              token: null  // Assuming null token indicates they are offline
+          };
+          await UserService.put(updatedUser);
+
+          // Emit logout event with user data so that server knows who logged out
+          socket.emit("logout", updatedUser);
+
+          // Now proceed to client-side logout operations
           disconnectSocket();
           await AsyncStorage.removeItem("token");
-          socket.emit("logout");
-          const currentUser = users.find(u => u.username === user);
-          if (currentUser) {
-              const updatedUser = {
-                  username: currentUser.username,
-                  token: null
-              };
-              await UserService.put(updatedUser);
-              router.replace("/");
-          }
-      } catch (error) {
-          console.error("Error during logout:", error);
+          router.replace("/");
       }
-  };
+  } catch (error) {
+      console.error("Error during logout:", error);
+  }
+};
+
   
   return (
     <View>
