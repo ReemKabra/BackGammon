@@ -91,7 +91,6 @@ const handleLogout = async () => {
           }/>
       <View>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10 }}>
-                <Text>Users</Text>
                 <TouchableOpacity onPress={handleLogout}>
                     <Text style={{ color: 'red' }}>Logout</Text>
                 </TouchableOpacity>
