@@ -1,10 +1,9 @@
 class user{
-    constructor(username, password, email,lastlogin,token="") {
+    constructor(username, password, email,lastlogin) {
         this.username = username;
         this.password = password;
         this.email = email;
         this.lastlogin = lastlogin;
-        this.token = token;
 }
 }
 export default user

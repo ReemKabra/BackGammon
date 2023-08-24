@@ -4,18 +4,16 @@ import { useRouter } from "expo-router";
 import userService from "../../services/userService";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import {initiateSocket,getSocket} from "../utils/socket";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 const LogIn = () => {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isExists, setIsExists] = useState(true);
-  const [users, setUsers] = useState([]);
-  const fetchUsers = async () => {
-    const response = await userService.get();
-    setUsers(response.data);
-  };
+  const [users, setUsers] = useState([]); 
+
   useEffect(() => {
-    fetchUsers();
     
   }, []);
   const onChangeHandler = (fieldName, text) => {
@@ -27,25 +25,15 @@ const LogIn = () => {
     }
   };
   const loginHandler = () => {
-    const user = users.find((user) => user.username === username);
-    if (!user) {
-      setIsExists(false);
-    } else if (user) {
-      userService
+    userService
         .login(username, password)
-        .then((loginSucceeded) => {
+        .then((loginSucceeded) => { 
           if (loginSucceeded) {
-            initiateSocket();
-            const socket = getSocket();
-            const loggedInUser = {
-              username: user.username,
-            };
-            socket.emit("user-login", loggedInUser);  
+            initiateSocket(); 
             Alert.alert("loginSucceeded");
             router.replace("components/UserList2");
           } else Alert.alert("Login failed");
         });
-    }
   };
   
   const NavigateToSignUp = () => {

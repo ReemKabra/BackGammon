@@ -2,30 +2,17 @@ import React,{useState,useEffect} from 'react'
 import { useRouter,Stack } from 'expo-router';
 import User from '../../models/user';
 import userService from '../../services/userService';
+import {getSocket,disconnectSocket,initiateSocket} from "../utils/socket";
 import { View, Text, TextInput, Button,Alert } from 'react-native';
-export const SignUp = ({navigation}) => {
+export const SignUp = () => {
   const router=useRouter();
-    const [users, setUsers] = useState([]);
     const [isExists, setIsExists] = useState(false);
     const [isPassword, setIsPassword] = useState(true);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
-    const fetchUsers = async () => {
-      try {
-        const response = await userService.get();
-        if (response) {
-          setUsers(response.data);
-        } else {
-          console.error("sign up failed");
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-  
     useEffect(() => {
-      fetchUsers();
+    
     }, []);
     const onChangeHandler = (fieldName, text) => {
       if (fieldName === 'username') {
@@ -40,20 +27,21 @@ export const SignUp = ({navigation}) => {
       }
     };
     const signupHandler = () => {
-      const user = users.find((user) => user.username === username);
-      if (user) {
-        setIsExists(true);
-      }
       if (password.length < 6) {
         setIsPassword(false);
-      } else if (password.length >= 6 && !user) {
+      } else if (password.length >= 6 ) {
         setIsExists(false);
         setIsPassword(true);
         const newuser=new User(username, password,email)
         console.log(newuser);
-        userService.post(newuser);
-        Alert.alert("Success", "User signed up successfully!");
-        router.replace("/")
+        try{
+          userService.post(newuser);
+          Alert.alert("Success", "User signed up successfully!");
+          router.replace("/")
+        }
+        catch(eror){
+          setIsExists(true);
+        }
       }
     };
     const BackHandler = () => {

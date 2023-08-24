@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import userService from "../../services/userService";
-import  UserService  from '../../services/userService';
 import styles from './UserItem.style';
-import {getSocket,disconnectSocket} from "../utils/socket";
+import {getSocket,disconnectSocket,initiateSocket} from "../utils/socket";
 import {
   View,
   Text,
@@ -15,71 +14,51 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
  const Userlist2 = () => {
   const socket=getSocket();
   const [onlinedUsers,setOnlineUsers]=useState([]);
-  const [isLoading,setIsLoading]=useState();
-  const [users, setUsers] = useState([]);
   const [user,setUser] = useState("");
   const[offlineUsers,setOfflineUsers]=useState([]);
-  const getuser= async()=>{
-    const username = await AsyncStorage.getItem("username");
-    setUser(username);
-    const response= await userService.get();
-    if(response){
-      setOnlineUsers(response.data.filter(user=>user.username!=username&&user.token));
-      setOfflineUsers(response.data.filter(user=>!user.token));
-      setUsers(response.data);
-    }
-  }
   useEffect(() => {
-    getuser();
-    const handleUserLogin = (loggedInUser) => {
-        if (loggedInUser.username !== user) {  // Prevent adding yourself to the list
-            setOnlineUsers(prevUsers => [...prevUsers, loggedInUser]);
-            setOfflineUsers(prevUsers => 
-                prevUsers.filter(u => u.username !== loggedInUser.username)
-            );
-        }
-    }
-    const handleUserLogout = (loggedOutUser) => {
-        if (loggedOutUser.username !== user) {  // Prevent removing yourself from the list
-            setOfflineUsers(prevUsers => [...prevUsers, loggedOutUser]);
-            setOnlineUsers(prevUsers => 
-                prevUsers.filter(u => u.username !== loggedOutUser.username)
-            );
-        }
-    }
-    socket.on("recieved user-login", handleUserLogin);
-    socket.on("received-logout", handleUserLogout);
-
-    return () => {
-        socket.off("recieved user-login", handleUserLogin);
-        socket.off("received-logout", handleUserLogout);
+    const getuser = async() => {
+        const username = await AsyncStorage.getItem("username");
+        setUser(username);
     };
-}, [socket, user]);
+    getuser();
+    const handleUsers = (offlineusers,onlineusers) => {
+        console.log("username",user);
+        offlineusers = offlineusers.filter(offlineUser => {
+            return offlineUser.username !== user;
+        })
+        onlineusers = onlineusers.filter(onlineusers => {
+            return onlineusers.username !== user;
+        })
+        console.log("offline",offlineusers,"online",onlineusers)
+            setOfflineUsers(offlineusers);
+            setOnlineUsers(onlineusers);      
+    }
+    socket.on("getUsers",handleUsers);
+    socket.on("user-registered",handleUsers);
+    socket.on("user-logged-in", handleUsers);
+    socket.on("user-logged-out", handleUsers);
+    return () => {
+        socket.off("getUsers", handleUsers);
+        socket.off("user-logged-in", handleUsers);
+        socket.off("user-logged-out", handleUsers);
+    };
+}, []);
 const handleLogout = async () => {
-  try {
-      const currentUser = users.find(u => u.username === user);
-      if (currentUser) {
-          // First, update the user's status in your database/service
-          const updatedUser = {
-              username: currentUser.username,
-              token: null  // Assuming null token indicates they are offline
-          };
-          await UserService.put(updatedUser);
+    const username = await AsyncStorage.getItem("username"); 
+    const token = await AsyncStorage.getItem("refreshToken");
+    await AsyncStorage.removeItem("token");
+    await AsyncStorage.removeItem("refreshToken");
+    await AsyncStorage.removeItem("username");
+    await AsyncStorage.removeItem("FriendName");
+    const socket = getSocket();
+    socket.emit('userLoggedOut', { username: username, token:token });
+    console.log(username, token);
+    disconnectSocket();
+    router.replace('/'); 
 
-          // Emit logout event with user data so that server knows who logged out
-          socket.emit("logout", updatedUser);
 
-          // Now proceed to client-side logout operations
-          disconnectSocket();
-          await AsyncStorage.removeItem("token");
-          router.replace("/");
-      }
-  } catch (error) {
-      console.error("Error during logout:", error);
-  }
 };
-
-  
   return (
     <View>
        <Stack.Screen

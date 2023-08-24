@@ -2,24 +2,31 @@ import React,{useState,useEffect} from 'react'
 import { View, FlatList, TextInput, Button, Text,TouchableOpacity } from 'react-native';
 import { Stack, router } from 'expo-router';
 import styles from './Chat.style';
-import {initiateSocket,getSocket,disconnectSocket} from "../utils/socket";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import io from "socket.io-client/dist/socket.io";
  const ChatScreen = () => {
-    const socket = getSocket();
+    const socket=io.connect("http://192.168.1.54:2000")
     const[FriendName,setFriendName] =useState("") 
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([]);
     const [typing, setTyping] = useState(false);
     const [user, setUser] = useState("");
+    const [roomId, setRoomId] = useState("");
     const sendMessage = () => {
-        setTyping(false);
-        if (message.trim() !== '' && socket) {  // check if socket is defined
-            setMessages([...messages, { text: message, sender: user }]);
-            socket.emit('message', { text: message, sender: user }); // emit your message
+        if (message.trim() !== '' && socket) {
+            const messageObj = {
+                text: message,
+                sender: user,
+                recipient: FriendName,
+                roomId: roomId 
+            };
+            setMessages([...messages, messageObj]);
+            socket.emit('message', messageObj);
             setMessage('');
-
+        
         }
     };
+    
     const handleTyping = (text) => {
         setMessage(text);
         if (text) {
@@ -33,34 +40,46 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
         setFriendName(name);
         const username=await AsyncStorage.getItem('username');
         setUser(username);
+        setRoomId([username, name].sort().join('-'));
+        console.log('roomid: ', roomId);
+        socket.emit("joinRoom", user, FriendName);
     }
     useEffect(() => {
         GetNames();
-        if (socket) {
-            socket.on('typing', (data) => {
-                if (data.user !== user) {
-                    setTyping(true);
-                }
-            });
-
-            socket.on('message', (message) => {
+        const handleNewMessage = (message,RoomName) => {
+            console.log("Roomname",RoomName,"RoomId",roomId);
+            if (RoomName === roomId) {
                 setMessages((prevMessages) => [...prevMessages, message]);
-            });
-
-            socket.on('stopTyping', () => {
-                setTyping(false);
-            });
-        }
-
-        return () => {
-            // Clean up event listeners when the component is unmounted.
-            if (socket) {
-                socket.off('typing');
-                socket.off('message');
-                socket.off('stopTyping');
             }
         };
-    }, [socket]);
+    
+        const handleTyping = (data) => {
+            if (data!== user) {
+                setTyping(true);
+            }
+        };
+    
+        const handleStopTyping = () => {
+            setTyping(false);
+        };
+        if (socket && user && FriendName) {
+            socket.on('Newmessage', handleNewMessage);
+            socket.on('typing', handleTyping);
+            socket.on('stopTyping', handleStopTyping);
+        }
+        return () => {
+            if (socket) {
+                socket.off('Newmessage', handleNewMessage);
+                socket.off('typing', handleTyping);
+                socket.off('stopTyping', handleStopTyping);
+            }
+            if (user && FriendName) {
+                socket.emit("leaveRoom", { user: user, friend: FriendName });
+            }
+        };
+     
+    }, [socket, roomId, user, FriendName]);
+  
   return (
     <View style={styles.container}>
       <Text>Chat with {FriendName}</Text>
