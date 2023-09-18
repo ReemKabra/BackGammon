@@ -27,6 +27,9 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ddd',
     paddingBottom: 5,
     marginBottom: 5,
+    flexDirection:'row',
+    alignItems: 'center', 
+    justifyContent: 'space-between'
   },
 });
 

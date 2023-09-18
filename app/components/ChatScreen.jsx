@@ -5,7 +5,7 @@ import styles from './Chat.style';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import io from "socket.io-client/dist/socket.io";
  const ChatScreen = () => {
-    const socket=io.connect("http://192.168.1.54:2000")
+    const socket=io.connect("http://192.168.1.33:2000")
     const[FriendName,setFriendName] =useState("") 
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([]);

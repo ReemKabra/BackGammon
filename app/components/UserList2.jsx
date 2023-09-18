@@ -59,6 +59,14 @@ const handleLogout = async () => {
 
 
 };
+// const handleGameReqest=(FriendName)=>{
+//     if (user==FriendName){
+
+//     }
+
+
+//     router.push("components/GameBoard");
+// }
   return (
     <View>
        <Stack.Screen
@@ -83,7 +91,7 @@ const handleLogout = async () => {
                     data={onlinedUsers}
                     renderItem={({ item }) => (
                         <View style={{ marginBottom: 15 }}>
-                            <UserItem user={item} />
+                            <UserItem user={item}/>
                         </View>
                     )}
                     keyExtractor={item => item.username} 

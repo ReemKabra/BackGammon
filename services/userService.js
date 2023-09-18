@@ -1,6 +1,6 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-const URL="http://192.168.1.54:8080/"
+const URL="http://192.168.1.33:8080/"
 class userService {
     get(){
         return axios.get(URL);
