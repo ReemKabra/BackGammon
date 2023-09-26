@@ -102,11 +102,11 @@ console.log("userColor:", userColor);
               friend: FriendName,
               moveDetails: { fromRow: selectedToken.row, fromCol: selectedToken.col, toRow: row, toCol: col }
           });
-          if(declareWinner()=="Black"||declareWinner()=="White")
-          {
-            setGameEnd(true);
-            setWinnerColor(declareWinner());
-          }
+          // if(declareWinner()=="Black"||declareWinner()=="White")
+          // {
+          //   setGameEnd(true);
+          //   setWinnerColor(declareWinner());
+          // }
       } else {
           setSelectedToken(null);
       }
@@ -122,31 +122,31 @@ console.log("userColor:", userColor);
       </View>
     );
   };
-  const declareWinner = (boardState) => {
-    let whiteCount = 0;
-    let blackCount = 0;
+//   const declareWinner = (boardState) => {
+//     let whiteCount = 0;
+//     let blackCount = 0;
 
-    // Count the number of white and black pieces on the board
-    for (let row = 0; row < boardState.length; row++) {
-        for (let col = 0; col < boardState[row].length; col++) {
-            const tileValue = boardState[row][col];
-            if (tileValue === 1 || tileValue === 3) {
-                whiteCount++;
-            } else if (tileValue === 2 || tileValue === 4) {
-                blackCount++;
-            }
-        }
-    }
+//     // Count the number of white and black pieces on the board
+//     for (let row = 0; row < boardState.length; row++) {
+//         for (let col = 0; col < boardState[row].length; col++) {
+//             const tileValue = boardState[row][col];
+//             if (tileValue === 1 || tileValue === 3) {
+//                 whiteCount++;
+//             } else if (tileValue === 2 || tileValue === 4) {
+//                 blackCount++;
+//             }
+//         }
+//     }
 
-    // Determine the winner based on the counts
-    if (whiteCount === 0) {
-        return "Black"; // Black wins if there are no white pieces left
-    } else if (blackCount === 0) {
-        return "White"; // White wins if there are no black pieces left
-    } else {
-        return "No winner"; // The game is not over yet
-    }
-};
+//     // Determine the winner based on the counts
+//     if (whiteCount === 0) {
+//         return "Black"; // Black wins if there are no white pieces left
+//     } else if (blackCount === 0) {
+//         return "White"; // White wins if there are no black pieces left
+//     } else {
+//         return "No winner"; // The game is not over yet
+//     }
+// };
 
   useEffect(() => {
     GetNames();
@@ -187,17 +187,17 @@ console.log("userColor:", userColor);
 
   return (
     <View style={styles.board}>
-       <Text>Welcome {user}  good luck</Text>
-      <Text>it's {currentTurn} turn</Text>
-      {gameEnd&&<Text>{winnerColor} is the winner</Text>}
+     <Text style={[styles.turn, userColor === 1 ? styles.whiteText : styles.blackText]}>
+  It's {currentTurn} turn
+</Text>
       {Array.from({ length: boardSize }).map((_, row) => renderRow(row))}
     </View>
   );
 };
 const styles = StyleSheet.create({
   board: {
-    width: 320,
-    height: 320,
+    width: 500,
+    height: 500,
     flexDirection: 'column',
   },
   row: {
@@ -230,6 +230,17 @@ blackQueenToken: {
     backgroundColor: 'darkred',   // Change the background color for black queens
     borderColor: 'white',        // Optional white border for visibility
     borderWidth: 1,              // Optional white border for visibility
-}
+},
+whiteText: {
+  fontSize: 25,
+  color: 'white',
+  justifyContent: 'center',
+},
+
+blackText: {
+  fontSize: 25,
+  color: 'black',
+  justifyContent: 'center',
+},
 });
 export default Board;
