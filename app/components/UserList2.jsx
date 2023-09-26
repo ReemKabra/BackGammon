@@ -20,15 +20,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
     const getuser = async() => {
         const username = await AsyncStorage.getItem("username");
         setUser(username);
+        console.log("User1: " + username);
+
     };
     getuser();
-    const handleUsers = (offlineusers,onlineusers) => {
+    console.log("User2: " + user);
+    const handleUsers = async (offlineusers,onlineusers) => {
+        const username = await AsyncStorage.getItem("username");
         console.log("username",user);
         offlineusers = offlineusers.filter(offlineUser => {
-            return offlineUser.username !== user;
+            return offlineUser.username !== username;
         })
         onlineusers = onlineusers.filter(onlineusers => {
-            return onlineusers.username !== user;
+            return onlineusers.username !== username;
         })
         console.log("offline",offlineusers,"online",onlineusers)
             setOfflineUsers(offlineusers);

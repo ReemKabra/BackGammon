@@ -1,5 +1,5 @@
 import React, { useState,useEffect } from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet,Text } from 'react-native';
 import { initializeBoard, isValidMove, makeMove, isCaptureMove } from './GameLogic';
 import io from "socket.io-client/dist/socket.io";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -12,6 +12,10 @@ const Board = () => {
   const [selectedToken, setSelectedToken] = useState(null);
   const [currentTurn, setCurrentTurn] = useState(null);
 const [boardState, setBoardState] = useState(initializeBoard()); 
+const [userColor, setUserColor] = useState("");
+const[qweenColor, setQweenColor] = useState("");
+const[gameEnd, setGameEnd]=useState(false);
+const[winnerColor, setWinnerColor] = useState("");
 const GetNames = async () => {
   try {
       const name = await AsyncStorage.getItem('FriendName');
@@ -35,19 +39,30 @@ const GetNames = async () => {
   }
 };
 
-  const renderToken = (row, col, tileValue) => {
-    switch(tileValue) {
-        case 1:
-            return <View style={[styles.token, styles.whiteToken]} />;
-        case 2:
-            return <View style={[styles.token, styles.blackToken]} />;
-        case 3:
-            return <View style={[styles.token, styles.whiteToken, styles.queenToken]} />; // Add some distinct style for the queen
-        case 4:
-            return <View style={[styles.token, styles.blackToken, styles.queenToken]} />;
-        default:
-            return null;
-    }
+const renderToken = (row, col, tileValue) => {
+  let tokenStyle = [styles.token];
+
+  switch (tileValue) {
+      case 1:
+          tokenStyle.push(styles.whiteToken);
+          break;
+      case 2:
+          tokenStyle.push(styles.blackToken);
+          break;
+      case 3:
+          // Style for white queen
+          tokenStyle.push(styles.whiteToken);
+          tokenStyle.push(styles.whiteQueenToken);
+          break;
+      case 4:
+          // Style for black queen
+          tokenStyle.push(styles.blackToken);
+          tokenStyle.push(styles.blackQueenToken);
+          break;
+      default:
+          return null;
+  }
+  return <View style={tokenStyle} />;
 };
   const renderTile = (row, col) => {
     const isBlack = (row + col) % 2 === 1;
@@ -64,12 +79,20 @@ const GetNames = async () => {
     );
 };
 const handleTilePress = (row, col, tileValue) => {
+  console.log("tileValue:", tileValue);
+console.log("userColor:", userColor);
   if (currentTurn !== user) {
       console.log("It isn't your turn");
       return;
   }
-
+  if (tileValue!== userColor&&tileValue!=0 &&tileValue!=qweenColor) {
+    setSelectedToken(null);
+    console.log("You can only move your own tokens");
+    return;
+  }
+  console.log(selectedToken)
   if (selectedToken) {
+    console.log(isValidMove(boardState, selectedToken.row, selectedToken.col, row, col, selectedToken.value));
       if (isValidMove(boardState, selectedToken.row, selectedToken.col, row, col, selectedToken.value)) {
           const newBoard = makeMove(boardState, selectedToken.row, selectedToken.col, row, col);
           console.log("New board2", newBoard);
@@ -79,10 +102,16 @@ const handleTilePress = (row, col, tileValue) => {
               friend: FriendName,
               moveDetails: { fromRow: selectedToken.row, fromCol: selectedToken.col, toRow: row, toCol: col }
           });
+          if(declareWinner()=="Black"||declareWinner()=="White")
+          {
+            setGameEnd(true);
+            setWinnerColor(declareWinner());
+          }
       } else {
           setSelectedToken(null);
       }
   } else {
+    if(tileValue!=0)
       setSelectedToken({ row, col, value: tileValue });
   }
 };
@@ -93,6 +122,32 @@ const handleTilePress = (row, col, tileValue) => {
       </View>
     );
   };
+  const declareWinner = (boardState) => {
+    let whiteCount = 0;
+    let blackCount = 0;
+
+    // Count the number of white and black pieces on the board
+    for (let row = 0; row < boardState.length; row++) {
+        for (let col = 0; col < boardState[row].length; col++) {
+            const tileValue = boardState[row][col];
+            if (tileValue === 1 || tileValue === 3) {
+                whiteCount++;
+            } else if (tileValue === 2 || tileValue === 4) {
+                blackCount++;
+            }
+        }
+    }
+
+    // Determine the winner based on the counts
+    if (whiteCount === 0) {
+        return "Black"; // Black wins if there are no white pieces left
+    } else if (blackCount === 0) {
+        return "White"; // White wins if there are no black pieces left
+    } else {
+        return "No winner"; // The game is not over yet
+    }
+};
+
   useEffect(() => {
     GetNames();
 
@@ -104,26 +159,37 @@ const handleTilePress = (row, col, tileValue) => {
   
     };
 
-    const onYourTurn = (player) => {
+    const onYourTurn =  async (player,assignedColor) => {
+      const username = await AsyncStorage.getItem('username');
+      console.log('Player:', player);
+      console.log('User:', username);
         setCurrentTurn(player);
-        if (player === user) {
-            console.log("It's", user, "turn");
+        if (assignedColor)
+        {
+          setUserColor(2);
+          setQweenColor(4);
+        }else{
+          setUserColor(1);
+          setQweenColor(3);
+        }
+        if (player === username) {
+            console.log("It's", username, "turn");
         }
     };
-
-    // Add listeners
     socket.on('moveMade', onMoveMade);
     socket.on('yourTurn', onYourTurn);
 
-    // Cleanup: Remove listeners
     return () => {
         socket.off('moveMade', onMoveMade);
         socket.off('yourTurn', onYourTurn);
     };
-}, []);  // Empty dependency array to ensure this useEffect runs only once
+}, []);  
 
   return (
     <View style={styles.board}>
+       <Text>Welcome {user}  good luck</Text>
+      <Text>it's {currentTurn} turn</Text>
+      {gameEnd&&<Text>{winnerColor} is the winner</Text>}
       {Array.from({ length: boardSize }).map((_, row) => renderRow(row))}
     </View>
   );
@@ -156,8 +222,14 @@ const styles = StyleSheet.create({
     borderColor: 'white', // Optional white border for visibility
     borderWidth: 1, // Optional white border for visibility
   },
-  queenToken: {
-    backgroundColor: 'cyan',  // Lighter shade of black
-  },
+  whiteQueenToken: {
+    backgroundColor: 'lightblue',  // Change the background color for white queens
+},
+
+blackQueenToken: {
+    backgroundColor: 'darkred',   // Change the background color for black queens
+    borderColor: 'white',        // Optional white border for visibility
+    borderWidth: 1,              // Optional white border for visibility
+}
 });
 export default Board;
